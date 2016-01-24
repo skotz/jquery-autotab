@@ -576,10 +576,20 @@
                     }
                 }
             }
-        }).on('keypress.autotab', function (e) {
+        }).on('keyup.autotab', function (e) {
             var defaults = getSettings(this),
                 keyCode = e.which || e.keyCode;
 
+            this.lastValue = this.lastValue || '';
+            if (typeof keyCode === 'undefined' || keyCode == 229) {
+                for (var i = 0; i < e.target.value.length; i++) {
+                    var str = e.target.value.substr(0, i) + e.target.value.substr(i + e.target.value.length - this.lastValue.length);
+                    if (str === this.lastValue) {
+                        keyCode = e.target.value.substr(i, e.target.value.length - this.lastValue.length).charCodeAt(0);
+                    }
+                }
+            }
+                
             // e.charCode == 0 indicates a special key has been pressed, which only Firefox triggers
             if (!defaults || defaults.disabled || (settings.firefox && e.charCode === 0) || e.ctrlKey || e.altKey || keyCode == 13 || this.disabled) {
                 return true;
@@ -635,9 +645,10 @@
                         $(this).trigger('autotab-next', defaults);
                         return false;
                     }
-
-                    this.value = this.value.slice(0, selection.start) + keyChar + this.value.slice(selection.end);
-                    setSettings(this, { changed: (this.value != defaults.originalValue) });
+                    else if (selection.start != selection.end) {
+                        this.value = this.value.slice(0, selection.start) + keyChar + this.value.slice(selection.end);
+                        setSettings(this, { changed: (this.value != defaults.originalValue) });
+                    }
                 }
 
                 // Prevents the cursor position from being set to the end of the text box
